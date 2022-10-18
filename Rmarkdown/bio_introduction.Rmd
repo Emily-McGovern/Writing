@@ -1,0 +1,752 @@
+---
+title: "Introduction to Bioinformatics"
+author: "Dr Emily McGovern"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::material:
+    self_contained: true
+    highlight: kate
+---
+
+```{r settings, include=FALSE, cache=FALSE}
+
+
+
+## Global options
+options(max.print="100")
+opts_chunk$set(echo=FALSE,
+               cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=100)
+
+knitr::opts_chunk$set(
+  # This should allow Rmarkdown to locate the data
+  root.dir = here::here()
+)
+
+image_dir<-here::here("static/img/")
+data_dir<-here::here("static/data/")
+```
+
+
+# Introduction to Bioinformatics
+
+This document is a brief introduction to bioinformatic tools and concepts used for sequencing analysis using UNSW's computational Cluster, Katana. The focuses is 16S rRNA analysis using QIIME2 and our MRC 16S rRNA pipeline. It will also introduce you to the phyloseq package in R for custom graphics in R.
+
+
+```{r echo=FALSE, out.width = '90%',  fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "intro_image.jpg"))
+
+
+```
+
+# High Performance Cluster Basics
+
+You can find a nice introduction to HPC [here](https://hpc-carpentry.github.io/hpc-intro/). Below are some basic introductions.
+
+**What is a High Performance Cluster (HPC)**
+
+A High Performance Cluster refers to a cluster of computers used to tackle large scale analytical problems. Essentially it's a large collection of computing resources which can be utilised for scientific research.
+
+**Compute Nodes**
+
+Compute nodes can be thought of as powerful computers/servers, which carry out the majority of the work on a HPC.  Each computer node has it's own, Operating System (OS), Central Processing Unit (CPU), Memory (RAM) and Hard Drive (HD).
+
+**Head Node**
+
+The Head node is essentially the brains behind the HPC.  It is responsible for tracking and allocating computing resources to users.
+
+**Login Node**
+
+This is the node which controls user access and logon
+
+**Scheduling System**
+
+At the heart of the HPC is the software which manages the workload. Essentially it's a program that attempts to balance utilisation across the resource available.
+
+**Queue** 
+
+All jobs run on queues.  Queues have differing attributes which match the jobs which run on them.  These attributes can relate to things like: job run time length, number of slots, amount of memory.
+
+**Job**
+
+A job is essentially your task, the code which you ask the HPC to execute.
+
+# Katana | UNSW Research 
+
+Katana is a shared computational cluster located on campus at UNSW that has been designed to provide easy access to computational resources for groups working with non-sensitive data. Katana will be used for your next generation sequencing analysis.
+
+### Log on to Katana
+
+Download a terminal in order to log on to a remote terminal e.g. [Iterm](https://www.iterm2.com/) (Mac) or [mobaxterm](https://mobaxterm.mobatek.net/) (Windows)
+
+
+```{bash,eval=F, echo=T}
+ssh zID@katana.unsw.edu.au
+
+```
+
+```{r echo=FALSE, out.width = '90%'}
+knitr::include_graphics(paste0(image_dir, "katana_logon.png"))
+```
+
+Log on from Mobaxterm (Windows Computer)
+```{r echo=FALSE, out.width = '90%'}
+knitr::include_graphics(paste0(image_dir, "mobaxterm windows.png"))
+```
+
+### Working on Katana
+Always create an [interactive job](https://research.unsw.edu.au/katana-compute-jobs) to work on Katana - Do not run jobs on head node
+```{bash,eval=F, echo=T}
+qsub -I -l nodes=1:ppn=1,mem=10gb,walltime=10:00:00
+```
+```{r echo=FALSE, out.width = '90%'}
+knitr::include_graphics(paste0(image_dir, "interactive session (1).png"))
+```
+
+Always work in your scratch drive, this directory has a lot more space than your home
+```{bash,eval=F, echo=T}
+cd /srv/scratch/zID
+```
+A lot of programs are pre-installed on Katana, to view:
+
+```{bash,eval=F, echo=T}
+module avail
+```
+
+To load a program
+
+```{bash,eval=F, echo=T}
+module load program
+```
+### Katana data Mover
+
+Use [Katana data mover (kdm)](https://research.unsw.edu.au/katana-storage) to move data. Data can be moved from desktop to remote server using a SFTP client [WinSCP](https://winscp.net/eng/index.php) or [FileZilla](https://filezilla-project.org/) for mac. Use this to upload data (e.g. study metadata) and download your results.
+
+* Hostname = `ssh zID@kdm.unsw.edu.au`
+* Username = zID
+* Password = zID password
+* Port = 22
+
+```{r echo=FALSE, out.width = '90%'}
+knitr::include_graphics(paste0(image_dir, "FileZ.png"))
+```
+
+You can also log on to the kdm on your ssh client in the same way you log on to katana. 
+
+Use this if you are downloading data or databases to Katana
+
+```{r echo=FALSE, out.width = '90%'}
+knitr::include_graphics(paste0(image_dir, "kdm_login.png"))
+```
+
+```{bash,eval=F, echo=T}
+ssh zID@kdm.unsw.edu.au
+```
+
+
+### Training 
+
+UNSW research technology offer a range of training courses, that as of 2020 have been moved online. These are a great introduction to general programming and will help you improve the efficiency of your work. Explore them [here](https://research.unsw.edu.au/research-technology-training) 
+
+
+# Basic Linux commands
+
+Introduce yourself to basic linux command using an [online course](http://www.ee.surrey.ac.uk/Teaching/Unix/)
+
+|Command|Meaning|Example|
+|:---------------------|:-------------------------------|----------------------------------------------|
+|`ls`| list files in current directory, with -l, it also displays file permissions, sizes and last updated date/time| `ls -l`, `ls`|
+|`pwd`| displays your current location in the file system|`pwd`|
+|`env`| displays your user environment settings (e.g. search path, history size and home directory)|`env`|
+|`cd`| change directory| `cd /file/path`|
+|`mv`| move file, change file name - **Careful with this, no undo!** | `mv /path/file/ /newpath/file` , `mv oldname newname`|
+|`cp`| copy files, -R copy directory| `cp /path/file/ /newpath/file`, `cp -R ./directory ./newdirectorylocation`|
+|`head`| print top lines in file| `head filename` , `head -10 filename`|
+|`tail`| print last lines in file|`tail filename` , `tail -10 filename`|
+|`less`| view lines in file, use spacebar to go down file| `less filename`|
+|`grep`| search file for pattern or string| `cat filename |grep "aaatttcc"` |
+|`*`| wildcard, use with other commands| `ls *.fastq` : list all files with suffix ".fastq"|
+|`wc`| word count, with -l = linecount| `wc filename`, `wc -l filename`| 
+|`rm`| remove filename , with -R directory **Again careful**| `rm filenmae`|
+|`exit`| exit remote server| `exit`|
+|`.`| This represents the current directory| `pwd .`, `cd ./path/to/subdirectory/from/currentdir`|
+|`..`| This represents the parent directory| `pwd ..`, `cd ../path/to/subdirectory/from/parentdir`|
+
+Table:Useful everyday commands
+
+
+## Text editing from the command line
+When learning bioinformatics, you will most likely need to create or edit text files, shell scripts or Python scripts from the command line. Using a Unix-based text editor good practice for getting used to the environment if you are new to the command line. 
+
+There are multiple text editors available. Which one you use is based on user preference, beginners usually go for nano or vim.
+
+**Text Editors**
+
+* nano
+* vim
+* emacs
+
+**User Guides**
+
+* Simple [ guide](https://rachaellappan.github.io/learn-vim/) from a beginners perspective
+* More comprehensive [guide](https://bioinformatics.uconn.edu/vim-guide/) to vim
+
+**Useful Tip** 
+
+If using `vim` and you are stuck in a wrong mode etc, you can always escape using by pressing `ESC` followed by `:q!` and this will allow you exit without saving any changes.
+
+# Microbiome introduction
+
+### What does your raw data look like?
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "fastq_file.png"))
+```
+
+### And after analysis in bioinformatic sequence analysis?
+
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "basic_taxonomicoutput.png"))
+```
+
+
+## Alpha Diversity
+
+Alpha diversity refers to the average species diversity in a habitat or specific area (i.e. human subject)
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "alpha_diversity.png"))
+```
+
+Taxonomic data is rarefied to an even sequencing depth prior to alpha diversity analysis. This is because samples with many more reads may look like they have a higher number of different bacteria present than samples with a low sequencing depth. We can illustrate this with a [rarefaction curve](### Rarefraction).
+
+**Importance**: Diversity indices provide important information about rarity and commonness of species in a community. The ability to quantify diversity in this way is an important tool for biologists trying to understand community structure.<br />
+
+### Alpha diversity Indices
+
+* **Evenness**: refers to how equally abundant species in an environment are  <br />
+* **Shannon’s index**: Calculates richness and diversity using a natural logarithm. Accounts for both abundance and evenness of the taxa present  <br />
+* **Simpson’s index**: Measures the relative abundance of the different species making up the sample richness. Annonated as simperson below  <br />
+* **Observed**: Number of observed features <br />
+* **invsimpeson**: The invsimpson calculator is the inverse of the classical simpson diversity estimator. This parameter is preferred to other measures of alpha-diversity because it is an indication of the richness in a community with uniform evenness that would have the same level of diversity. 
+* **Chao**: Computes the Chao species estimator for abundance or presence-absence data  
+* **Chao1** will return an estimate of species richness based on a vector or matrix of abundance data(number of species in a population) 
+* **Chao2** will return an estimate of species richness based on incidence data  
+* **Gini**: The Gini-Simpson index is the probability of interspecific encounter, i.e., probability that two entities represent different types
+
+
+
+## Beta-diversity
+
+**Beta diversity describes how different the microbial composition in one environment compared to another**
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "beta_diversity.png"))
+
+```
+
+## Bray–Curtis dissimilarity <br />
+**Based on abundance or read count data** <br />
+
+Differences in microbial abundances between two samples (e.g., at species level) values are from 0 to 1<br />
+
+* 0 = both samples share the same species at exact the same abundances <br />
+* 1 = both samples have completely different species abundances <br />
+
+## Jaccard distance<br />
+**Based on presence or absence of species**<br />
+Does not include abundance information. Difference in microbial composition between two samples
+
+* 0 = both samples share exact the same species
+* 1 = both samples have no species in common
+
+## Unifrac distance <br />
+**Based on the fraction of branch length that is shared between two samples or unique to one or the other sample**
+
+**Unweighted UniFrac**<br />
+
+* Based on sequence distances (does not include abundance information)
+
+**Weighted UniFrac**<br />
+
+* Branch lengths are weighted by relative abundances (includes both sequence and abundance information)
+
+## Statisical Comparison
+
+**Permutational multivariate analysis of variance (PERMANOVA)** is used in the report to quantify multivariate community-level differences between groups.
+
+[PERMANOVA](https://onlinelibrary.wiley.com/doi/full/10.1002/9781118445112.stat07841) is a non-parametric multivariate statistical test. It is used to compare groups of objects and test the null hypothesis that the centroids and dispersion of the groups as defined by measure space are equivalent for all groups. <br />
+
+
+## Ordination plots
+
+Dissimilarity scores can be plotted in an ordination plot to visualise sample/group similarity. Below is the example output from QIIME, you can also produce your own custom ordination graphics using R studio
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "pcoa_qiime2.png"))
+```
+
+## Taxonomic Rank
+
+In biological classification, taxonomic rank is the relative level of a group of organisms (a taxon) in a taxonomic hierarchy. Examples of taxonomic ranks are species, genus, family, order, class, phylum, kingdom, domain, etc.
+
+QIIME2 output will output a classification at each level. You will use the taxa tables to you an insight into the specific taxa which are differentially abundant between treatment groups.
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "taxomonic levels copy.png"))
+```
+
+
+# 16S rRNA amplicon software Installation
+
+## [Minconda](https://docs.conda.io/en/latest/miniconda.html) 
+Create `bin` directory in your scratch drive 
+```{bash, eval=F, echo=T}
+mkdir bin
+```
+Move into `bin`
+```{bash,eval=F, echo=T}
+cd /srv/scratch/zID/bin
+```
+Download miniconda 
+```{bash,eval=F, echo=T}
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh
+```
+In your terminal window, run
+```{bash,eval=F, echo=T}
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+Follow the prompts on the installer screens. To make the changes take effect, close and then re-open your terminal window.
+
+Test your installation. In your terminal window, run the command `conda list`. A list of installed packages appears if it has been installed correctly.</br>
+
+
+## [QIIME2](https://qiime2.org/) 
+
+Installation guide [here](https://docs.qiime2.org/2020.2/install/native/#install-miniconda) and summary below.
+
+### Summary intallation
+
+Download QIIME 2 Core 2020.2 distribution
+```{bash,eval=F, echo=T}
+wget https://data.qiime2.org/distro/core/qiime2-2020.2-py36-linux-conda.yml
+```
+Create a conda environment and install the QIIME 2 Core 2020.2 distribution within the environment
+```{python, eval=F, echo=T}
+conda env create -n qiime2-2020.2 --file qiime2-2020.2-py36-linux-conda.yml
+```
+Now that you have a QIIME 2 environment, activate it using the environment’s name
+```{python, eval=F, echo=T}
+conda activate qiime2-2020.2
+```
+To deactivate an environment
+```{python, eval=F, echo=T}
+conda deactivate
+```
+You can test your installation by activating your QIIME 2 environment and running:
+```{python, eval=F, echo=T}
+qiime --help
+```
+If no errors are reported when running this command, the installation was successful!
+
+## [Fastp](https://github.com/OpenGene/fastp) 
+
+Installation in `qiime2-2020.2` environment
+
+Load environment
+```{python, eval=F, echo=T}
+conda activate qiime2-2020.2
+```
+Install [fastp](https://github.com/OpenGene/fastp) 
+```{python, eval=F, echo=T}
+conda install -c bioconda fastp
+```
+
+## [Bowtie2](https://github.com/BenLangmead/bowtie2)
+
+Installation in `qiime2-2020.2` environment
+
+Load environment
+```{python, eval=F, echo=T}
+conda activate qiime2-2020.2
+```
+
+Install [Bowtie2](https://anaconda.org/bioconda/bowtie2)
+```{python, eval=F, echo=T}
+conda install -c bioconda bowtie2
+```
+
+
+# Metadata preparation
+
+## Sample names 
+
+When submitting samples for sequencing, begin sample with a character or string followed by a numeric identifier e.g. `S1`, or `sample_1`.
+
+**Do not** submit samples with names beginning with `0`, `-` etc... this causes problems downstream.
+
+## Formatting
+Metadata is most commonly stored in a TSV (i.e. tab-separated values) file. These files typically have a .tsv or .txt file extension. TSV files are simple text files used to store tabular data, and the format is supported by many types of software. You can create and edit your .tsv file in excel!
+
+Read more about metadata QIIME2 [here](https://docs.qiime2.org/2019.10/tutorials/metadata/)
+
+## Validation 
+
+QIIME 2 will also automatically validate a metadata file anytime it is used by the software. You can use [Keemei](https://keemei.qiime2.org/) to validate your metadata prior to importation into QIIME2.
+
+## White space
+In Qiime2 any cell in the metadata contains leading or trailing whitespace characters (e.g. spaces, tabs), those characters will be ignored when the file is loaded. Thus, leading and trailing whitespace characters are not significant, so cells containing the values `"gut"` and `"  gut  "` are equivalent. 
+
+This is **NOT** the case in R with `"gut"` and `"  gut  "`  recognised as different values, so it is best to avoid this practice in general.
+
+## End of line
+
+Text files created on Windows machines can have different line endings than files created on Unix/Linux. This can cause problems when analysing data. It is good to be aware of this and check this out if you run into problems during your analysis.
+
+To avoid this after preparing the metadata file, use [Noteplus++](https://notepad-plus-plus.org/downloads/). Open the metadata file and check the end is linux format by **showing symbols**, if the endline is LF, correct, if it is CRLF, replace CR with blank.
+
+
+**Line endings in general**
+
+* Windows: `\r\n`
+* Mac (OS 9-): `\r`
+* Mac (OS 10+): `\n`
+* Unix/Linux: `\n`
+
+## Example Metadata
+
+The following format will work in both QIIME2 and R. Using `#Sample` or `#SampleID` for the first column of metadata will work in QIIME2 but not R.
+
+```{r, echo=FALSE}
+library(kableExtra)
+library(magrittr)
+metadata<-read.csv(paste0(data_dir, "example_metadata.txt"), sep = "\t")
+knitr::kable(metadata, "markdown", caption = "Example Metadata") %>%
+  kable_styling(position = "center")
+```
+
+# Quality Control Analysis 
+
+## Before you begin
+
+Prior to this please ensure that you have completed the [moving picture tutorial](https://docs.qiime2.org/2020.2/tutorials/moving-pictures/) for QIIME2. It is important to understand the command line steps independently to the MRC pipeline in order to help you debug problems that may arise with code.
+
+## Inital Filtering step
+
+Prior to importing data into QIIME, the data will be assessed with Fastp. This step functions to assess overall sequence quality. Output information will be in a html format and will include:
+
+* Insert size is the length of DNA that you want to sequence and that is inserted between the adapters (adapters excluded).
+* Total reads refer to the total number of reads generated by the sequencing run
+* Total bases refer to the total number of nucleotide bases sequenced during the sequencing run 
+* Quality Scores for Next-Generation Sequencing (NGS) assessing sequencing accuracy using Phred quality scoring (Q score). Low Q scores can increase false-positive variant calls, which can result in inaccurate conclusions and higher costs for validation experiments.
+
+|Phred Quality|Score	Probability of incorrect bases call|	Base call accuracy|
+|:--------:|:--------:|:-------:|
+|10 |	1 in 10 |	90%|
+|20	|1 in 100|	99%|
+|30	|1 in 1000|99.9%|
+Table: Phred Quality table
+
+### Fastp output report 
+```{r echo=FALSE, out.width = '100%'}
+
+knitr::include_graphics(paste0(image_dir, "fastp.png"))
+```
+
+## Dada2 denoise 
+
+For targeted filtering we use [DADA2](https://www.nature.com/articles/nmeth.3869) within QIIME2. This is a relatively new method and pushed the field from the practice of binning sequences into 97% OTUs, to effectively using the sequences themselves as the unique identifiers for a taxon. Now referred to 100% Operational Taxonomic Unit (OTU)or [amplicon sequence variants(AVS)](https://www.nature.com/articles/ismej2017119/).
+
+Below is the summary statistics from the targeted filtering we use DADA2. 
+
+As you would have learned in the moving pictures tutorial, to visualize the denoising stats from running dada2 denoise-paired run the following command and view the file in [QIIME2 View](https://view.qiime2.org/). To download as a TSV to run statistical analysis, click the button in the left corner
+
+```
+qiime metadata tabulate \
+--m-input-file stats-dada2.qza \
+--o-visualization stats-dada2.qzv
+```
+
+```{r echo=FALSE, out.width = '100%'}
+knitr::include_graphics(paste0(image_dir, "stats-dada2.qvz.png"))
+```
+
+* The **input column** refers to the sequence reads imported into QIIME2 from the initial QC filtration.  
+* Sequence reads are then filtered/denoised using parameters set by user. These are determined based on sequence 16SrRNA gene region amplified and quality assessment from the fastp report.
+* The **merge column** (only present for paired end samples) refers to the number of the forward and reverse reads which were successfully merged together to obtain the full denoised sequences.  Merging is performed by aligning the denoised forward reads with the reverse-complement of the corresponding denoised reverse reads, and then constructing the merged “contig” sequences. By default, merged sequences are only output if the forward and reverse reads overlap by at least 12 bases, and are identical to each other in the overlap region.
+* The **non-chimeric column** refers to the number of sequences remaining after chimera removal. Chimeras are artifactual PCR product/amplicon generated erroneously from more than one DNA template. It is well-known that chimeras are inevitable when preparing amplicon sequencing libraries for NGS. It is therefore important to detect and filter them out before any types of microbiome analyses. 
+
+## Host DNA removal
+[Bowtie2](https://github.com/BenLangmead/bowtie2) is used for the removal of host contamination. If you are working with samples other than stool then it is important to remove any host contamination; i.e. murine or human. All non-chimeric merged sequences were aligned against the host genome. Successfully aligned sequences were then removed prior to subsequent analyses.
+
+# QC commands
+
+Make directory for project - important to organise your directory and data in a logical fashion! 
+```{bash,eval=F, echo=T}
+mkdir /srv/scratch/zID/project_directory
+```
+Within this make directory for raw data 
+```{bash,eval=F, echo=T}
+mkdir /srv/scratch/zID/project_directory/fastq
+```
+
+Concatenate the fastq files for QC and importation into Qiime2
+```{bash,eval=F, echo=T}
+cat *R1_001.fastq > all_R1.fq
+``` 
+```{bash,eval=F, echo=T}   
+cat *R2_001.fastq > all_R2.fq
+```
+Move concatenated files into directory away from original fastq files 
+
+Make directory for concatenated files
+```{bash,eval=F, echo=T}
+mkdir /srv/scratch/zID/project_directory/cat_files
+```
+Move the concatonated file into `cat_files` .. example of where you use `*` (wildcard)
+```{bash,eval=F, echo=T}
+mv all* /srv/scratch/zID/project_directory/cat_files
+```
+
+### Use pipeline for to create job for QC steps 
+
+Create output directory for quality control step of pipeline
+```{bash,eval=F, echo=T}
+mkdir /srv/scratch/zID/project_directory/qc_out
+```
+The MRC 16S rRNA pipeline (MIMA) is written in the coding language perl and stored in `/srv/scratch/mrcbio/mima/`. To gain access to this directory contact the MRC bioinformatics team.
+
+```{perl,eval=F, echo=T}
+perl /srv/scratch/mrcbio/mima/prepare_manifest_and_qc.pl <Absolute path> <output.manifest> <total_1.fq> <total_2.fq> <outputdir> <# of threads>
+```
+
+
+|Option|Meaning|
+|---------------|---------------------------------------------------------|
+|Absolute path|Directory to your raw fastq files:`/srv/scratch/zID/project_directory/fastq`|
+|Output Manifest|`output_manifest`| 
+|Total_1.fq|`/srv/scratch/zID/project_directory/cat_files/all_R1.fq`|
+|Total_2.fq|`/srv/scratch/zID/project_directory/cat_files/all_R2.fq`|
+|outputdir|`/srv/scratch/zID/project_directory/qc_out`|
+|# of threads| Threads are a way for a program to divide (termed "split") itself into two or more simultaneously running tasks, default 12|
+Table: Prepare_manifest_and_qc.pl options explained
+
+**Example of code**
+```{perl,eval=F, echo=T}
+perl /srv/scratch/mrcbio/mima/prepare_manifest_and_qc.pl /srv/scratch/zID/project_directory/fastq output_manifest /srv/scratch/zID/project_directory/cat_files/all_R1.fq /srv/scratch/zID/project_directory/cat_files/all_R2.fq /srv/scratch/zID/project_directory/qc_out 12
+```
+
+Amend job file so that it works with version on qiime2 installed in your account
+
+To do this use a text editor **[vim](https://bioinformatics.uconn.edu/vim-guide/)**
+
+```{bash,eval=F, echo=T}
+vim fastp.pbs
+```
+
+To edit using vim hit `i`, this will allow you to insert text, add the following text to the beginning of the fastp.pbs file
+
+```{bash,eval=F, echo=T}
+#!/bin/bash
+#PBS -l nodes=1:ppn=12
+#PBS -l mem=80gb
+#PBS -j oe
+#PBS -l walltime=100:00:00
+#export LC_ALL=en_AU.utf8
+#export LANG=en_AU.utf8
+
+conda activate qiime2-2020.2
+
+```
+
+To say the changes type `:wq` , this will save and quit, if you made a mistake and would like to quit without saving type `:q!`
+
+Once your changes have been made submit your job : `qsub fastp.pbs`
+
+To view it's progress `qstat | grep zID`
+
+
+### Remove Host DNA 
+
+Make output directory for host remove output
+
+```{bash,eval=F, echo=T}
+mkdir /srv/scratch/zID/project_directory/remove_host
+```
+Pipeline command for remove host comtination
+```{perl,eval=F, echo=T}
+perl /srv/scratch/mrcbio/mima/decontaminate_host.pl <rep_seqs.qza> <table.qza> <outputdir> <qiime_version_qiime2-2020.2> <host_genome.fa_bowtie2_index>
+```
+
+|Option|Meaning|
+|--------|---------------------------------------------------------|
+|rep_seqs.qza|`./project_directory/qc_out/rep_seqs.qza`|
+|table.qza|`./project_directory/qc_out/table.qza`| 
+|outputdir|`./project_directory/remove_host`|
+|qiime_version_qiime2-2020.2|`qiime2-2020.2`|
+|host_genome.fa_bowtie2_index|Human genome: `/srv/scratch/mrcbio/humangenome/`, Murine genome: `/srv/scratch/mrcbio/mousegenome/`|
+Table:Decontaminate_host.pl options explained
+
+In your interactive job either run or set up job similarly to above
+
+```{bash,eval=F, echo=T}
+bash decontaminationhost.pbs
+```
+
+# Basic Diversity Statistics
+
+### Rarefraction 
+
+```{r echo=FALSE, out.width = '80%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "rarefy_plot.png"))
+```
+
+This plot shows that as the sequencing depth (Sample Size) gets higher, more species are observed. One way to overcome this is to normalise by subsampling to even sequencing depths. This is like putting all of your counts for a sample in a bag and randomly pulling out a set number of counts so that all samples end up having the same total (refer to the **“rarefying"**). This approach is widely [criticised](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003531) because it can lead to throwing out huge amounts of data, but it remains one of the best (and most simple) ways to normalise before estimating alpha-diversity since some metrics rely on actual counts (integers).
+
+
+### Rarefying your data
+Use sequencing depth for -d option in `diversity-basic-statistic.pl` to indicate the sampling depth you want your sequences rarefied too. 
+
+### Investigating sequencing depth of samples
+
+* To find out the sequencing depth of samples, download `table-summarize.qzv` and visualise the data in [Qiime view](https://view.qiime2.org/).
+* All sequences will be rarefied to the sample with the lowest sequencing depth. Use your intuition here too e.g. if a sample has less than 100 then it needs to be removed from the analysis. Your negative control should also be a good guide, you're not expecting many sequences from this sample.
+
+```{r echo=FALSE, out.width = '90%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "table_summary.png"))
+```
+
+
+### Basic diversity analysis 
+
+Make directory for output of basic diversity analysis 
+```{bash,eval=F, echo=T}
+mkdir /srv/scratch/zID/project_directory/basic_diversity
+```
+
+MRC pipeline command for basic diversity analysis. This script will produce the code to analysis the basic diversity metrics for all metadata factors in your metadata
+
+```{perl,eval=F, echo=T}
+perl /srv/scratch/mrcbio/mima/diversity-basic-statistic.pl -m sample.metatdata.tsv -c clasifier.qza -o output_dir -n [threads number] -h [verbose]
+```
+
+
+|Option|Meaning|
+|--------------------------|-------------------------------------------------------------|
+|-m sample.metatdata.tsv|`./project_directory/sample_metadata.tsv`|
+|-c clasifier.qza|`./bin/db/clasifier.qza` | 
+|-o output_dir|`./project_directory/basic_diversity`|
+|-n [threads number]| Threads are a way for a program to divide (termed "split") itself into two or more simultaneously running tasks, default 12|
+|-d depth| depth of default [5000] - sequencing depth|
+Table:Diversity-basic-statistic.pl options explained
+
+To find out the sequencing depth of samples run the following in QIIME2 use FileZilla to download table-summarize.qzv output from host DNA with view with [QIIME2 view](https://view.qiime2.org/)
+
+### Feature Classifer Training
+
+* For this make sure you have access to a classifier, you may need to download a 16S rRNA database and train your own [classifer](https://docs.qiime2.org/2020.2/tutorials/feature-classifier/). Commonly used databases include [Greengenes and Silvia](https://docs.qiime2.org/2020.2/data-resources/) (Silva more up to date!)
+
+* Read the documentation and give it a go! 
+
+* The most commonly used 16S rRNA primers used in the MRC are the **16S_V3-V4 (341f-805r)**. For different primer types the databases will need to be re-trained.
+```
+341F: CCTACGGGNGGCWGCAG
+805R: GACTACHVGGGTATCTAATCC
+```
+
+## Taxonomic output 
+
+As mentioned above you will use the taxa tables to you an insight into the specific taxa which are differentially abundant between treatment groups.
+
+You can visualise relative taxonomic composition of your samples and your download the normalised taxonomy table using `normalized.taxa-bar-plots.qzv` with [QIIME2 view](https://view.qiime2.org/)
+
+```{r echo=FALSE, out.width = '60%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "normalised_taxa_bar_plot copy.png"))
+```
+
+# Longitudinal Analysis
+
+
+This section is mainly to highlight ways to present your data if you are conducting a longitudinal study and to highlight some additional features you may not have come across in qiime2. The [documentation](https://docs.qiime2.org/2020.2/plugins/available/longitudinal/) on qiime2 is excellent and please use it to learn about these extra plugin features. There are also some tutorials incorporating a longitudinal [dataset](https://docs.qiime2.org/2020.2/tutorials/pd-mice/#longitudinal-analysis). 
+
+Example code to produce the `.qzv` volatility output file 
+
+```{python, eval=F, echo=T}
+qiime longitudinal volatility 
+--m-metadata-file metadata.txt #metadata file (N.B. important to have this formatted logically - must match previous analysis to obtain core metric results)
+--m-metadata-file ./core-metrics-results/shannon_vector.qza #alpha diversity output (obtained from earlier analysis)
+--p-default-metric shannon #metric 
+--p-default-group-column treatment #treatment metadata i.e. gestational diabetes/healthy
+--p-state-column Timepoint #timepoint metadata data e.g. trimester
+--p-individual-id-column mouse_ID #subject 
+--o-visualization volatility_shannon.qzv #output
+```
+
+View, manipulate and download this `.qzv`file in [qiime2 view](https://view.qiime2.org/)
+
+```{r echo=FALSE, out.width = '100%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "shannon_alpha_long.png"))
+```
+
+
+# Plotting data in R 
+
+Utilise [UNSW introductory courses](https://research.unsw.edu.au/events) or online resources to R in order to familarise yourself with the fundamentals. Introductory course timetables can be found here
+
+Download R studio[here](https://rstudio.com/) 
+
+From your sequence analysis in QIIME2 download to your desktop
+
+*  `table.qza`
+*  `rooted-tree.qza`
+*  `taxonomy.qza`
+*  `sample-metadata.tsv` 
+
+Install required packages 
+
+[qiime2R](https://github.com/jbisanz/qiime2R/)
+
+```{r, eval=F, echo=T}
+if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
+devtools::install_github("jbisanz/qiime2R")
+```
+
+The R package phyloseq is designed specifically for analysing microbiome data. For more information, see the [homepage](http://bioconductor.org/packages/release/bioc/html/phyloseq.html).
+
+```{r, eval=F, echo=T}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("phyloseq")
+```
+
+In R studio set working directory 
+
+```{r, eval=F, echo=T}
+setwd("/Desktop/filepath/")
+```
+
+Create temporary directory 
+
+```{r, eval=F, echo=T}
+dir.create("tmpdir")
+```
+
+Import data as phyloseq object. A phyloseq object holds all of the data necessary for the analysis in a single place. It can contain: metadata for the samples, the abundance table, taxonomic assignments, a phylogenetic tree, and reference sequences. 
+
+
+```{r, eval=F, echo=T}
+phy_obj<-qza_to_phyloseq("rarefy.table.qza", "rooted-tree.qza", "taxonomy.qza", "sample-metadata.tsv", tmp="tmpdir")
+```
+
+Use [phyloseq tutorial](http://joey711.github.io/phyloseq/plot_ordination-examples.html) for publication quality graphics
+
+```{r echo=FALSE, out.width = '100%', fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "phylsoeq_image.png"))
+```
