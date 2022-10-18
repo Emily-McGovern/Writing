@@ -1,0 +1,101 @@
+---
+title: "Feature Classifer Training"
+author: "Emily McGovern"
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+     self_contained: TRUE
+     theme: "cerulean"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE, out.width = '20%'}
+knitr::include_graphics("/Users/emilymcgovern/OneDrive - UNSW/shotgun_metagenomics/MUMS/reports/MUMS_Stools_2020/report/MUMS_report/MRC Logo (1).PNG")
+```
+
+### Download Raw Database
+
+We will download and create several files, so first create a working directory.
+
+``````{bash, echo=TRUE, eval=FALSE}
+mkdir training-feature-classifiers
+cd training-feature-classifiers
+```
+
+Download Silva database
+
+```{bash, echo=TRUE, eval=FALSE}
+wget https://www.arb-silva.de/fileadmin/silva_databases/qiime/Silva_132_release.zip
+```
+
+Unzip the downloaded file and remove zipped file
+
+```{bash, echo=TRUE, eval=FALSE}
+unzip Silva_132_release.zip
+rm Silva_132_release.zip
+```
+
+Activate qiime
+
+```{bash, echo=TRUE, eval=FALSE}
+ conda activate qiime2-2020.2
+```
+
+### Read database into QIIME2
+
+1. The sequences
+
+```{python, echo=TRUE, eval=FALSE}
+qiime tools import \
+  --type 'FeatureData[Sequence]' \
+  --input-path SILVA_132_QIIME_release/rep_set/rep_set_16S_only/99/silva_132_99_16S.fna \
+  --output-path 99_otus.qza
+```
+
+2. The taxonomy strings
+
+```{python, echo=TRUE, eval=FALSE}
+qiime tools import \
+  --type 'FeatureData[Taxonomy]' \
+  --input-format HeaderlessTSVTaxonomyFormat \
+  --input-path SILVA_132_QIIME_release/taxonomy/16S_only/99/majority_taxonomy_7_levels.txt \
+  --output-path 99_otus_16S_taxonomy.qza
+```
+
+### Extract the V3/V4 region from the reference database
+The most commonly used 16S rRNA primers used in the MRC are the 16S_V3-V4 (341f-805r). For different primer types the databases will need to be re-trained. This produces the QIIME2 artifacts 99_otus_16S.qza (the reference sequences) and 99_otus_16S_taxonomy.qza (the taxonomic names). The 
+
+```
+341F: CCTACGGGNGGCWGCAG
+805R: GACTACHVGGGTATCTAATCC
+```
+
+```{python, echo=TRUE, eval=FALSE}
+  qiime feature-classifier extract-reads \
+  --i-sequences 99_otus.qza \  
+  --p-f-primer CCTACGGGNGGCWGCAG \
+  --p-r-primer GACTACHVGGGTATCTAATCC \ 
+  --p-min-length 300 \
+  --p-max-length 600 \
+  --verbose \
+&> 16S_V3-V4_training.log
+```
+
+### Train the classifier on this region
+This produces the QIIME2 artifact ref_seqs_16S_V3-V4.qza; the V3/V4 reference sequences.
+
+```{python, echo=TRUE, eval=FALSE}
+qiime feature-classifier fit-classifier-naive-bayes \
+--i-reference-reads ref_seqs_16S_V3-V4.qza \
+--i-reference-taxonomy 99_otus_16S_taxonomy.qza \
+--o-classifier classifier_16S_V3-V4.qza \
+--verbose \
+&> 16S_V3-V4_classifier.log
+```
+
+
+
+
