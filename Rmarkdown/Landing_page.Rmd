@@ -1,0 +1,80 @@
+---
+title: "Techinical Writing Journey"
+date: "`r Sys.Date()`"
+author: Emily McGovern
+output:
+  rmdformats::downcute:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rmdformats)
+image_dir<-here::here("static/img/")
+
+```
+
+## My Techinical Writing Journey
+
+I am a enthusiast for creating useful and exciting documentation. This is driven by my passion for removing ambiguity through my analytical and problem-solving capabilities  
+
+I began technical writing while completing my PhD in  University College Dublin. There I was writing research protocols and summarizing scientific experiments for peer review publication. 
+
+During my postdoc at the University of New South Wales. I have facilitated bioinformatic workshops for the clinical school. These workshops had diverse audiences (clinicians, allied health professionals and students) with varied knowledge of the subject matter. I created documentation to compliment the workshops and for attendees to work independently. I also created documentation for use of in house pipelines and various other protocols as required.
+
+In 2020, I had the opportunity to contribute the New South Wales pandemic Response. I worked as a Senior Data Analyst/Team Lead on the epidemiology team. The role involved building and automating analytical outputs of population based COVID-19 data. These automated reports required documentation which I was responsible for managing. The work in the pandemic response is fast paced and highly dynamic. We had new analysts joining regularly and I created documentation to on-board the new recruits! 
+
+From there I joined Janssen Australia, as a Project Manager on the Real World Evidence team. There I developed a SharePoint site for the team and upgraded the team documentation to be interactive and user friendly.
+
+
+
+
+```{r echo=FALSE, fig.width=40, fig.height=35,  fig.align='center'}
+knitr::include_graphics(paste0(image_dir, "career_path.jpeg"))
+
+
+```
+
+
+
+## Documentation Examples
+
+Below are some examples of my technical writing. 
+
+| Title      | Description | Test Text     |
+| :---        |    :----  |          ---: |
+| Introduction to Bioinformatics| A brief introduction to bioinformatic tools and concepts used for amplicon sequencing analysis with a High Performance Computer       | [Link](https://emily-mcgovern.github.io/Writing/out/bio_introduction.html)   |
+| Feature Classifer Training   | Quick guide to train a Naive Bayes classifer for taxonomic classification of microbial sequences      | [Link](https://emily-mcgovern.github.io/Writing/out/training-feature-classifer.html) |
+
+
+## Peer Reviewed Publications
+
+- **2017** [The structural and functional capacity of ruminal and cecal microbiota in growing cattle was unaffected by dietary supplementation of linseed oil and nitrate](https://www.frontiersin.org/articles/10.3389/fmicb.2017.00937/full)
+- **2017** [Plane of nutrition affects the phylogenetic diversity and relative abundance of transcriptionally active methanogens in the bovine rumen](https://www.nature.com/articles/s41598-017-13013-y)
+- **2018** [Evaluating established methods for rumen 16S rRNA amplicon sequencing with mock microbial populations](https://www.frontiersin.org/articles/10.3389/fmicb.2018.01365/full)
+- **2018** [16S rRNA sequencing reveals relationship between potent cellulolytic genera and feed efficiency in the rumen of bulls](https://www.frontiersin.org/articles/10.3389/fmicb.2018.01842/full)
+- **2018** [PSI-23 Evaluating the temporal development of the rumen microbiota from birth to post-weaning.](https://academic.oup.com/jas/article-abstract/96/suppl_3/184/5235118?redirectedFrom=fulltext)
+- **2018** [75 Late-Breaking: Investigation into the relationship Methanobrevibacter millerae YE315](https://academic.oup.com/jas/article-abstract/96/suppl_3/399/5235252?redirectedFrom=fulltext)
+- **2019** [Fasting challenges human gut microbiome resilience and reduces Fusobacterium](https://www.researchgate.net/publication/338219424_Fasting_Challenges_Human_Gut_Microbiome_Resilience_and_Reduces_Fusobacterium)
+- **2020** [Investigating temporal microbial dynamics in the rumen of beef calves raised on two farms during early life](https://academic.oup.com/femsec/article/96/2/fiz203/5698801)
+- **2020** [Microbiome Understanding in Maternity Study (MUMS), an Australian prospective longitudinal cohort study of maternal and infant microbiota: study protocol](https://bmjopen.bmj.com/content/10/9/e040189)
+- **2020** [Investigation into the effect of divergent feed efficiency phenotype on the bovine rumen microbiota across diet and breed](https://www.nature.com/articles/s41598-020-71458-0)
+- **2020** [Protocol: Microbiome Understanding in Maternity Study (MUMS), an Australian prospective longitudinal cohort study of maternal and infant microbiota: study protocol](https://bmjopen.bmj.com/content/10/9/e040189)
+- **2020** [Impact of the gut microbiome and metabolome on the peripheral immune response in non-alcoholic fatty liver disease-related hepatocellular carcinoma](https://www.nature.com/articles/s41467-020-20422-7)
+- **2021** [Gut microbiota impact on the peripheral immune response in non-alcoholic fatty liver disease related hepatocellular carcinoma](https://www.nature.com/articles/s41467-020-20422-7)
+- **2021** [Defining the temporal evolution of gut dysbiosis and inflammatory responses leading to hepatocellular carcinoma in Mdr2−/− mouse model](https://bmcmicrobiol.biomedcentral.com/articles/10.1186/s12866-021-02171-9)
+- **2022** [Refining a Protocol for Faecal Microbiota Engraftment in Animal Models After Successful Antibiotic-Induced Gut Decontamination](https://pubmed.ncbi.nlm.nih.gov/35223890/)
+- **2022** [The P4 Study: Postpartum Maternal and Infant Faecal Microbiome 6 Months After Hypertensive Versus Normotensive Pregnancy](https://www.frontiersin.org/articles/10.3389/fcimb.2022.646165/full)
+- **2022** [Corrigendum: The P4 Study: Postpartum Maternal and Infant Faecal Microbiome 6 Months After Hypertensive Versus Normotensive Pregnancy](https://pubmed.ncbi.nlm.nih.gov/35433511/)
+- **2022** [The metabolic influence of the core ciliate Entodinium caudatum within the rumen microbiome](https://www.biorxiv.org/content/10.1101/2022.06.22.497163v3)
+
+## Other
+
+**BMJ Gut Journal Scan** Regular contributor
+
+- Between 2020-2022, I was a regular contributor to the “Journal Scan” for the research journal Gut (IF 23). The role involved providing a concise summary of recent important research articles in the field of gastroenterology. [Contribution example](https://gut.bmj.com/content/71/7/1440.full?ijkey=0ELyilIN07cKGzx&keytype=ref) 
+
