@@ -1,5 +1,5 @@
 ---
-title: "Techinical Writing Journey"
+title: "Technical Writing Journey"
 date: "`r Sys.Date()`"
 author: Emily McGovern
 output:
@@ -18,7 +18,7 @@ image_dir<-here::here("static/img/")
 
 ```
 
-## My Techinical Writing Journey
+## About me
 
 I am a enthusiast for creating useful and exciting documentation. This is driven by my passion for removing ambiguity through my analytical and problem-solving capabilities  
 
